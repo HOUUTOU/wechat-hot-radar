@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "status": "ABSTAIN",
+  "requested_top_n": 50,
+  "target_date": "2026-09-04",
+  "timezone": "Asia/Tokyo",
+  "generated_at": "2026-09-04T13:43:06.819456+09:00",
+  "discovered_articles": 0,
+  "verified_share_articles": 0,
+  "candidate_articles": 0,
+  "discovery_only_articles": 0,
+  "source_health": [
+    {
+      "source_id": "verified-json-inbox",
+      "status": "empty",
+      "fetched": 0,
+      "accepted": 0,
+      "rejected": 0,
+      "message": "read 0 JSON file(s)"
+    },
+    {
+      "source_id": "bing-wechat-discovery",
+      "status": "empty",
+      "fetched": 0,
+      "accepted": 0,
+      "rejected": 0,
+      "message": "discovery only; no engagement metric is inferred"
+    }
+  ],
+  "warnings": [],
+  "ranking_rule": "verified share lower bound DESC, verified like lower bound DESC, published_at DESC",
+  "main": [],
+  "candidates": [],
+  "discovery_only": []
+}
