@@ -1,0 +1,77 @@
+name: Manual WeChat Hot Radar
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "目标日期 YYYY-MM-DD；留空表示今天"
+        required: false
+        type: string
+      timezone:
+        description: "榜单时区"
+        required: true
+        default: "Asia/Tokyo"
+        type: string
+      top_n:
+        description: "榜单数量"
+        required: true
+        default: "50"
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: manual-wechat-hot-radar
+  cancel-in-progress: false
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Verify code
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m compileall -q src tests
+          python -m unittest discover -s tests -v
+      - name: Build ranking
+        env:
+          PYTHONPATH: src
+          TARGET_DATE: ${{ inputs.date }}
+          TARGET_TIMEZONE: ${{ inputs.timezone }}
+          TOP_N: ${{ inputs.top_n }}
+        run: |
+          if [ -z "$TARGET_DATE" ]; then TARGET_DATE="today"; fi
+          python -m wechat_hot_radar run --date "$TARGET_DATE" --timezone "$TARGET_TIMEZONE" --top "$TOP_N"
+      - name: Validate report contract
+        run: python -c 'import json; d=json.load(open("reports/latest.json", encoding="utf-8")); assert d["status"] in {"PASS", "PARTIAL", "ABSTAIN"}; assert all(x["share"]["verified"] for x in d["main"])'
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wechat-hot-radar-report
+          path: |
+            reports/latest.md
+            reports/latest.json
+            reports/main.csv
+            reports/candidates.csv
+            reports/discovery.csv
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish latest report
+        env:
+          TARGET_DATE: ${{ inputs.date }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/latest.md reports/latest.json reports/main.csv reports/candidates.csv reports/discovery.csv
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "data: refresh on-demand WeChat radar"
+          git push
