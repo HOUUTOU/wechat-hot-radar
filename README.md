@@ -41,7 +41,17 @@ PYTHONPATH=src python -m wechat_hot_radar run --date today --timezone Asia/Tokyo
 
 ## 当前能力边界
 
-微信没有向公众提供覆盖全平台的免费实时转发排行榜。开源程序可以稳定完成文章发现、校验、去重、分类、排序、来源健康检查和报告生成，但无法保证上游一直公开互动数据。
+### 安全修订：字段齐全不等于已核验
+
+旧版本仅凭数值、证据 URL 和时间齐全就标记 `verified`，不足以证明真实性。
+现在将其分为 `evidence_present`（字段齐全）和 `verified`（通过来源核验）。
+外部 JSON 中自报的 `verified`、`source_verified` 或“官方”等级不会授予核验资格。
+
+**目前还没有接通经过审查的真实转发/点赞核验器。** 因此导入 JSON 仅作为待核验资料，
+不进入主榜或点赞候选榜；当前标准运行将返回 `ABSTAIN`。这不是完整热榜服务已经上线。
+单元测试中的内部已核验对象是合成测试材料，不代表正式数据。
+
+本项目尚未取得覆盖全平台的免费实时转发数据源。程序提供文章发现、字段检查、去重、分类、排序、来源健康检查和报告生成，但无法保证上游一直公开互动数据或服务永久可用。
 
 因此，本项目保证的是：
 
@@ -62,7 +72,7 @@ PYTHONPATH=src python -m wechat_hot_radar run --date today --timezone Asia/Tokyo
 默认启用两类来源：
 
 1. `bing-wechat-discovery`：发现公开微信文章并回到原文核验文章身份；只负责发现，不产生互动指标。
-2. `verified-json-inbox`：读取符合证据契约的公开数据记录，可进入主榜。
+2. `verified-json-inbox`：保留原有配置 ID，读取待核验记录；名字不代表已通过核验，不能仅凭导入进入主榜。
 
 配置中还预留了 `rss_wechat` 和 `json_url`：前者可以连接自建 RSSHub/其他标准 RSS，后者可以连接遵守数据契约的公开 JSON 地址。示例默认关闭，填写真实 HTTPS 地址后即可启用。
 
@@ -74,7 +84,18 @@ PYTHONPATH=src python -m wechat_hot_radar run --date today --timezone Asia/Tokyo
 
 ## 数据文件
 
-把公开、可复核的数据文件放入 `data/inbox/*.json`，再运行工作流。指标必须包含原始显示值、证据 URL 与观察时间；缺少其中任一项都不会被视为已验证。
+把公开、可复核的数据文件放入 `data/inbox/*.json`。原始显示值、证据 URL 与观察时间只是核验的必要条件，不是充分条件；文件字段不能自行证明真实性。
+
+## 可选 Firecrawl 本机试验
+
+新增 `firecrawl_local` 适配器，**默认关闭**，不改变现有工作流。只允许本机 IP，
+不调用 Firecrawl Cloud、不使用 API Key、不启用 LLM 提取，也不自动安装或启动服务。
+它仅提取文章信息，不产生转发量或点赞量。
+
+已有经过配置检查的免费自部署实例时，按 [试验指南](docs/FIRECRAWL_PILOT.md) 操作。
+当前 Firecrawl 测试使用模拟响应；真实微信公众号成功率、资源消耗和长期稳定性尚未实测。
+
+运行不依赖付费 API，但自部署设备、电力与维护仍有成本；不能承诺第三方平台永远免费。
 
 ## 开发与验证
 

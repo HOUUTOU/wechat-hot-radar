@@ -9,6 +9,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 from .adapters import BingRssWechatAdapter, JsonDirectoryAdapter, JsonUrlAdapter, RssWechatAdapter
+from .adapters.firecrawl_local import FirecrawlLocalAdapter
 from .classify import classify
 from .models import Article, CollectionResult, MetricEvidence, SourceHealth
 
@@ -30,9 +31,9 @@ def canonical_url(url: str) -> str:
     return urllib.parse.urlunparse(("https", parsed.netloc.lower(), parsed.path, "", urllib.parse.urlencode(kept), ""))
 
 
-def _metric_priority(metric: MetricEvidence) -> tuple[int, float]:
+def _metric_priority(metric: MetricEvidence) -> tuple[bool, bool, int, float]:
     observed = metric.observed_at.timestamp() if metric.observed_at else -1.0
-    return _TIER_PRIORITY.get(metric.evidence_tier, 0), observed
+    return metric.verified, metric.evidence_present, _TIER_PRIORITY.get(metric.evidence_tier, 0), observed
 
 
 def _choose_metric(left: MetricEvidence, right: MetricEvidence) -> MetricEvidence:
@@ -89,6 +90,12 @@ def run_pipeline(config_path: Path, target_date: date, timezone_name: str) -> Co
                     [str(value) for value in source.get("queries", [])],
                     target_date.isoformat(),
                     int(source.get("max_per_query", 20)),
+                )
+            elif source_type == "firecrawl_local":
+                adapter = FirecrawlLocalAdapter(
+                    source_id,
+                    source.get("urls", []),
+                    endpoint=source.get("endpoint", "http://127.0.0.1:3002"),
                 )
             else:
                 health.append(SourceHealth(source_id, "failed", message=f"unsupported source type: {source_type}"))

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "id": "firecrawl-local-pilot",
+      "type": "firecrawl_local",
+      "enabled": false,
+      "endpoint": "http://127.0.0.1:3002",
+      "urls": []
+    }
+  ]
+}

@@ -21,14 +21,16 @@ class MetricTests(unittest.TestCase):
         self.assertEqual(metric.lower_bound, 321)
         self.assertEqual(metric.upper_bound, 321)
         self.assertTrue(metric.exact)
-        self.assertTrue(metric.verified)
+        self.assertTrue(metric.evidence_present)
+        self.assertFalse(metric.verified)
 
     def test_ten_thousand_plus_keeps_band(self):
         metric = self.parse("10万+")
         self.assertEqual(metric.lower_bound, 100_000)
         self.assertIsNone(metric.upper_bound)
         self.assertFalse(metric.exact)
-        self.assertTrue(metric.verified)
+        self.assertTrue(metric.evidence_present)
+        self.assertFalse(metric.verified)
 
     def test_decimal_unit(self):
         metric = self.parse("3.2万")

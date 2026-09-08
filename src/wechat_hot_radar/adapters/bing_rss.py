@@ -31,6 +31,11 @@ def _wechat_url(value: str) -> str | None:
 
 def _extract_verified_article(url: str, source_id: str) -> Article:
     body = fetch_bytes(url, timeout=12.0, attempts=2).decode("utf-8", errors="replace")
+    return article_from_html(body, url, source_id)
+
+
+def article_from_html(body: str, url: str, source_id: str) -> Article:
+    """提取页面声明的文章身份；不核验或推测互动指标。"""
     metadata = {match.group("name").lower(): html.unescape(match.group("content")) for match in _META.finditer(body)}
     title = metadata.get("og:title") or metadata.get("twitter:title")
     account = metadata.get("og:site_name") or metadata.get("author")

@@ -36,7 +36,8 @@ class AdapterTests(unittest.TestCase):
         ).encode()
         result = JsonUrlAdapter("public-json", "https://example.org/feed.json").collect()
         self.assertEqual(result.health.status, "ok")
-        self.assertTrue(result.articles[0].share.verified)
+        self.assertTrue(result.articles[0].share.evidence_present)
+        self.assertFalse(result.articles[0].share.verified)
 
     def test_json_url_rejects_plain_http(self):
         result = JsonUrlAdapter("public-json", "http://example.org/feed.json").collect()

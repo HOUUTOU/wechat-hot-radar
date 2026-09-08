@@ -34,7 +34,7 @@ def _status(main_count: int, requested: int) -> str:
 
 def _metric_text(article: Article, field: str) -> str:
     metric = getattr(article, field)
-    return metric.raw if metric.verified and metric.raw else "未公开"
+    return metric.raw if metric.verified and metric.raw else "未核验/未取得"
 
 
 def _markdown_table(articles: list[Article], include_share: bool = True) -> list[str]:
@@ -44,7 +44,7 @@ def _markdown_table(articles: list[Article], include_share: bool = True) -> list
     for index, article in enumerate(articles, 1):
         title = article.title.replace("|", "\\|")
         account = article.account.replace("|", "\\|")
-        share = _metric_text(article, "share") if include_share else "未公开"
+        share = _metric_text(article, "share") if include_share else "未核验/未取得"
         like = _metric_text(article, "like")
         rows.append(
             f"| {index} | [{title}]({article.url}) | {account} | {article.category} | "
@@ -128,6 +128,8 @@ def write_reports(
         "source_health": [item.to_dict() for item in result.health],
         "warnings": result.warnings,
         "ranking_rule": "verified share lower bound DESC, verified like lower bound DESC, published_at DESC",
+        "coverage": "configured_sources_only_not_all_wechat",
+        "verification_policy": "source_verified_required; imported JSON claims are unverified",
         "main": [article.to_dict() for article in main],
         "candidates": [article.to_dict() for article in candidates],
         "discovery_only": [article.to_dict() for article in discovery_only],
@@ -143,19 +145,21 @@ def write_reports(
         f"- 候选条目：{len(candidates)}",
         f"- 仅发现条目：{len(discovery_only)}",
         "- 排序：可验证转发量优先，其次可验证点赞量，最后发布时间。",
+        "- 范围：仅覆盖本次配置的数据源，不代表微信公众号全网排名。",
+        "- 核验：字段齐全不等于来源真实；未核验数据不进入热度榜。",
         "",
     ]
     if status != "PASS":
         lines.extend(
             [
-                "> 数据不足时不会补造条目。PARTIAL 表示主榜不足 50 条；ABSTAIN 表示没有文章满足转发证据要求。",
+                f"> 数据不足时不会补造条目。PARTIAL 表示主榜不足 {top_n} 条；ABSTAIN 表示没有文章满足转发证据要求。",
                 "",
             ]
         )
     lines.extend(["## 转发证据主榜", "", *_markdown_table(main), "", "## 点赞候选榜", ""])
     lines.append("> 下列文章没有可验证转发量，不能与主榜直接比较。")
     lines.extend(["", *_markdown_table(candidates, include_share=False), "", "## 仅发现文章", ""])
-    lines.append("> 下列文章的转发和点赞均未公开，仅按发布时间排列，不属于热度榜。")
+    lines.append("> 下列文章的转发和点赞均未取得或未完成来源核验，仅按发布时间排列，不属于热度榜。")
     lines.extend(["", *_markdown_table(discovery_only, include_share=False), "", "## 来源健康状态", ""])
     lines.extend(["| 来源 | 状态 | 获取 | 接受 | 拒绝 | 说明 |", "|---|---|---:|---:|---:|---|"])
     for health in result.health:

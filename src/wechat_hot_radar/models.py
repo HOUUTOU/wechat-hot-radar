@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any
+from urllib.parse import urlsplit
 
 
 @dataclass(frozen=True)
@@ -16,22 +17,37 @@ class MetricEvidence:
     source_url: str | None = None
     observed_at: datetime | None = None
     evidence_tier: str = "unknown"
+    # 仅由经过审查的来源核验器设置；JSON 输入不得赋值。
+    source_verified: bool = False
 
     @property
-    def verified(self) -> bool:
+    def evidence_present(self) -> bool:
+        if not isinstance(self.source_url, str):
+            return False
+        try:
+            source = urlsplit(self.source_url)
+            valid_source = (source.scheme in {"http", "https"} and bool(source.hostname)
+                            and source.username is None and source.password is None)
+        except ValueError:
+            return False
         return (
             self.lower_bound is not None
             and bool(self.raw)
-            and bool(self.source_url)
-            and self.source_url.startswith(("https://", "http://"))
+            and valid_source
             and self.observed_at is not None
             and self.observed_at.tzinfo is not None
         )
+
+    @property
+    def verified(self) -> bool:
+        """字段齐全仅表示有待核验证据，不代表来源或指标真实。"""
+        return self.evidence_present and self.source_verified
 
     def to_dict(self) -> dict[str, Any]:
         value = asdict(self)
         value["observed_at"] = self.observed_at.isoformat() if self.observed_at else None
         value["verified"] = self.verified
+        value["evidence_present"] = self.evidence_present
         return value
 
 
@@ -46,6 +62,7 @@ class Article:
     like: MetricEvidence = field(default_factory=MetricEvidence)
     category: str = "其他"
     summary: str = ""
+    page_evidence: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -58,6 +75,7 @@ class Article:
             "like": self.like.to_dict(),
             "category": self.category,
             "summary": self.summary,
+            "page_evidence": self.page_evidence,
         }
 
 

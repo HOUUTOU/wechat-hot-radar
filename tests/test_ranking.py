@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from dataclasses import replace
 import unittest
 
 from wechat_hot_radar.metrics import parse_metric
@@ -10,7 +11,9 @@ OBSERVED = datetime(2026, 9, 4, 6, 0, tzinfo=timezone.utc)
 
 
 def metric(value):
-    return parse_metric(value, source_url="https://example.org/e", observed_at=OBSERVED, evidence_tier="community")
+    # 仅用于排序单元测试的已核验内部对象，不能代表真实来源已接通。
+    return replace(parse_metric(value, source_url="https://example.org/e", observed_at=OBSERVED,
+                                evidence_tier="community"), source_verified=True)
 
 
 def article(title, share=None, like=None, hour=1):
