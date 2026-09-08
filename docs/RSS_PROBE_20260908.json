@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-09-08",
+  "method": "anonymous urllib GET; timeout 20s; max response 8MiB; no retries",
+  "status": "BLOCKED_SOURCE_ACCESS",
+  "feeds_attempted": 3,
+  "feeds_parsed": 0,
+  "ranking_eligible_share_evidence_obtained": 0,
+  "ranking_eligible_like_evidence_obtained": 0,
+  "note": "No article list retrieved; metric availability and article counts UNKNOWN, not zero.",
+  "results": [
+    {
+      "error": "HTTPError: HTTP Error 403: Forbidden",
+      "fetched_at": "2026-09-08T03:21:43.035003+00:00",
+      "name": "思想花火",
+      "url": "https://wechat2rss.xlab.app/feed/5b925323244e9737c39285596c53e3a2f4a30774.xml"
+    },
+    {
+      "error": "HTTPError: HTTP Error 403: Forbidden",
+      "fetched_at": "2026-09-08T03:21:59.399642+00:00",
+      "name": "腾讯安全应急响应中心",
+      "url": "https://wechat2rss.xlab.app/feed/7898375f78fd1018302d54577cd0fd05d5ed324f.xml"
+    },
+    {
+      "error": "HTTPError: HTTP Error 403: Forbidden",
+      "fetched_at": "2026-09-08T03:22:15.883972+00:00",
+      "name": "看雪学院",
+      "url": "https://wechat2rss.xlab.app/feed/0e026637254d450ae84c59f87d4e4fb4616651ca.xml"
+    }
+  ]
+}
